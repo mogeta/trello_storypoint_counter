@@ -1,7 +1,10 @@
 var global = this;function util() {
 }
 function callGetCard() {
+}
+function postMessage() {
 }(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (global){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -10,7 +13,6 @@ var Util = _interopRequire(require("./util.es6"));
 
 var Trello = _interopRequire(require("./trello.es6"));
 
-var global = undefined;
 global.util = function () {
     var hoge = new Util("test");
     hoge.hello();
@@ -21,18 +23,35 @@ global.callGetCard = function () {
     var trello_key = prop.trello_key;
     var trello_access_token = prop.trello_access_token;
     var boardID = prop.trello_target_board_id;
+    var slackChannelID = prop.slack_target_channel_id;
 
     var trello = new Trello(trello_key, trello_access_token);
 
     //get each cards
     var boards = trello.getLists(boardID);
+    var talk = "現在のプロジェクトステータスです\n";
+
     boards.forEach(function (board) {
         var cards = trello.getCards(board.id);
         var points = trello.mergeStoryPoint(cards);
-        Logger.log(points);
+        talk += board.name + "のストーリーポイントは" + points + "です。\n";
+    });
+
+    postMessage(slackChannelID, talk);
+};
+
+global.postMessage = function (channelID, comment) {
+    var prop = PropertiesService.getScriptProperties().getProperties();
+
+    var slackApp = SlackApp.create(prop.slack_token);
+
+    slackApp.postMessage(channelID, comment, {
+        username: "gas manager",
+        icon_emoji: ":+1:"
     });
 };
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./trello.es6":2,"./util.es6":3}],2:[function(require,module,exports){
 // export default (name) => 'Hello ' + name
 // module.exports.add = function() {
